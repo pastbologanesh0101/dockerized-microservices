@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# SQLite databases created at runtime / by tests
+*.db
+*.db-journal
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/

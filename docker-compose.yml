@@ -1,0 +1,57 @@
+version: "3.9"
+
+services:
+  users-service:
+    build:
+      context: ./users-service
+    image: dockerized-microservices/users-service
+    container_name: users-service
+    environment:
+      - USERS_DB_PATH=/data/users.db
+    volumes:
+      - users-data:/data
+    networks:
+      - microservices-net
+    ports:
+      - "5001:5001"
+
+  orders-service:
+    build:
+      context: ./orders-service
+    image: dockerized-microservices/orders-service
+    container_name: orders-service
+    environment:
+      - ORDERS_DB_PATH=/data/orders.db
+      - USERS_SERVICE_URL=http://users-service:5001
+    volumes:
+      - orders-data:/data
+    depends_on:
+      - users-service
+    networks:
+      - microservices-net
+    ports:
+      - "5002:5002"
+
+  api-gateway-service:
+    build:
+      context: ./api-gateway-service
+    image: dockerized-microservices/api-gateway-service
+    container_name: api-gateway-service
+    environment:
+      - USERS_SERVICE_URL=http://users-service:5001
+      - ORDERS_SERVICE_URL=http://orders-service:5002
+    depends_on:
+      - users-service
+      - orders-service
+    networks:
+      - microservices-net
+    ports:
+      - "5000:5000"
+
+networks:
+  microservices-net:
+    driver: bridge
+
+volumes:
+  users-data:
+  orders-data:

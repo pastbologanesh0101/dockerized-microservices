@@ -1,0 +1,44 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install users-service dependencies
+        run: pip install -r users-service/requirements.txt
+
+      - name: Install orders-service dependencies
+        run: pip install -r orders-service/requirements.txt
+
+      - name: Install api-gateway-service dependencies
+        run: pip install -r api-gateway-service/requirements.txt
+
+      - name: Install infra_tests dependencies
+        run: pip install -r infra_tests/requirements.txt
+
+      - name: Run users-service tests
+        run: pytest users-service/tests -v
+
+      - name: Run orders-service tests
+        run: pytest orders-service/tests -v
+
+      - name: Run api-gateway-service tests
+        run: pytest api-gateway-service/tests -v
+
+      - name: Run docker-compose / Dockerfile structural validation tests
+        run: pytest infra_tests -v
