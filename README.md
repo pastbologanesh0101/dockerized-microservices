@@ -142,6 +142,50 @@ curl -X POST http://localhost:5000/orders \
 # -> {"error": "user 999 does not exist"}
 ```
 
+## Troubleshooting / FAQ
+
+**I get a 502 from `/orders` (or directly from orders-service) saying
+"could not verify user; users-service unavailable" — what's happening?**
+`orders-service` calls `GET {USERS_SERVICE_URL}/users/<id>` on
+`users-service` before it will save an order, and that call has a 5-second
+timeout. A 502 here means the request raised `requests.RequestException`
+(connection refused, DNS failure, or a timeout) — not that the user was
+found-and-rejected. If you see this while running each service directly
+(not via Compose), the most common cause is `USERS_SERVICE_URL` pointing at
+the wrong host/port, e.g. leaving it at the Compose-network default
+(`http://users-service:5001`) instead of `http://localhost:5001` when
+running outside Docker. A "user does not exist" case is a distinct 404, not
+a 502.
+
+**I hit an endpoint through the gateway and got a plain-HTML 404 instead of
+a JSON error — is the gateway broken?** No — `api-gateway-service` only
+registers routes under `/users` and `/orders`. Anything else (a typo, an
+old endpoint, `/health/users`, etc.) never reaches the proxy code at all;
+it's Flask's own default 404 for an unmatched route, which is why it isn't
+JSON. If you need a JSON body for unmatched paths too, that would be a
+custom `@app.errorhandler(404)` — not currently implemented.
+
+**How do I actually run this with a real Docker daemon?** Nothing about the
+Dockerfiles or `docker-compose.yml` is untested — the structural checks in
+`infra_tests/` already validate that every build context, volume, and
+network reference resolves. If you have Docker Desktop (or another daemon)
+running, `docker compose up --build` from the repo root should just work.
+If it doesn't, that's a real bug worth filing, since these files were
+written to be correct by construction rather than by trial and error
+against a live daemon (see "A note on Docker in this repo" above).
+
+**Common docker-compose gotchas to watch for once you do have Docker:**
+- `docker compose down` alone leaves the `users-data`/`orders-data` named
+  volumes intact; add `-v` if you want a truly clean slate (this also
+  wipes both SQLite databases).
+- The three services find each other by container/service name
+  (`http://users-service:5001`, etc.), which only resolves on the
+  `microservices-net` bridge network Compose creates — those hostnames
+  won't resolve if you try to run one container standalone with `docker run`
+  outside of Compose.
+- Rebuilding after a dependency change needs `--build` (or `--no-cache` for
+  a stubborn layer cache); `docker compose up` alone reuses existing images.
+
 ## Project layout
 
 ```
