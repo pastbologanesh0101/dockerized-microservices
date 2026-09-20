@@ -37,6 +37,9 @@ suite (or CI) covers.
 
 ## Code style
 
+- An `.editorconfig` is checked in (4-space Python/Dockerfile indent,
+  2-space YAML, LF line endings, trimmed trailing whitespace) — most
+  editors pick it up automatically.
 - Match the existing style in each `app.py`: small, explicit Flask route
   functions, `request.get_json(silent=True) or {}` for parsing input, and
   a `jsonify(error=...)` plus the right HTTP status code for failures.
