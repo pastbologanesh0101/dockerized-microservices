@@ -1,5 +1,8 @@
 # Dockerized Microservices
 
+[![Tests](https://github.com/pastbologanesh0101/dockerized-microservices/actions/workflows/tests.yml/badge.svg)](https://github.com/pastbologanesh0101/dockerized-microservices/actions/workflows/tests.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A small, genuinely functional microservices demo: three Flask services that
 talk to each other over HTTP, wired together with Docker Compose.
 
@@ -10,6 +13,16 @@ talk to each other over HTTP, wired together with Docker Compose.
 - **api-gateway-service** — a thin reverse proxy that routes `/users/*` to
   users-service and `/orders/*` to orders-service, so clients only ever talk
   to one address.
+
+## Contents
+
+- [Architecture](#architecture)
+- [A note on Docker in this repo](#a-note-on-docker-in-this-repo)
+- [Running it](#running-it)
+- [API examples](#api-examples)
+- [Troubleshooting / FAQ](#troubleshooting--faq)
+- [Project layout](#project-layout)
+- [License](#license)
 
 ## Architecture
 
