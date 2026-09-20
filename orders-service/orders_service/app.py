@@ -15,19 +15,29 @@ from .db import get_connection, init_db
 DEFAULT_USERS_SERVICE_URL = os.environ.get(
     "USERS_SERVICE_URL", "http://users-service:5001"
 )
+DEFAULT_USERS_SERVICE_TIMEOUT = float(
+    os.environ.get("USERS_SERVICE_TIMEOUT_SECONDS", "5")
+)
 
 
-def create_app(db_path=None, users_service_url=None):
+def create_app(db_path=None, users_service_url=None, users_service_timeout=None):
     app = Flask(__name__)
     app.config["DB_PATH"] = db_path or os.environ.get("ORDERS_DB_PATH", "orders.db")
     app.config["USERS_SERVICE_URL"] = users_service_url or DEFAULT_USERS_SERVICE_URL
+    app.config["USERS_SERVICE_TIMEOUT"] = (
+        users_service_timeout
+        if users_service_timeout is not None
+        else DEFAULT_USERS_SERVICE_TIMEOUT
+    )
     init_db(app.config["DB_PATH"])
 
     def user_exists(user_id):
         """Return True/False if users-service answered, or None if unreachable."""
         base = app.config["USERS_SERVICE_URL"].rstrip("/")
         try:
-            resp = requests.get(f"{base}/users/{user_id}", timeout=5)
+            resp = requests.get(
+                f"{base}/users/{user_id}", timeout=app.config["USERS_SERVICE_TIMEOUT"]
+            )
         except requests.RequestException:
             return None
         if resp.status_code == 200:

@@ -79,6 +79,26 @@ def test_create_order_valid_user(mock_get, client):
 
 
 @patch("orders_service.app.requests.get")
+def test_users_service_timeout_is_configurable(mock_get, tmp_path):
+    """The users-service HTTP timeout defaults to 5s but can be overridden
+    (via the users_service_timeout constructor arg, which mirrors the
+    USERS_SERVICE_TIMEOUT_SECONDS env var) — useful if users-service is
+    known to be slower in some environment and the default is too tight."""
+    mock_get.return_value = FakeResponse(200)
+    db_path = str(tmp_path / "orders_timeout_test.db")
+    app = create_app(
+        db_path=db_path,
+        users_service_url="http://users-service:5001",
+        users_service_timeout=1.5,
+    )
+    app.testing = True
+    with app.test_client() as c:
+        resp = c.post("/orders", json={"user_id": 1, "item": "Widget"})
+    assert resp.status_code == 201
+    mock_get.assert_called_once_with("http://users-service:5001/users/1", timeout=1.5)
+
+
+@patch("orders_service.app.requests.get")
 def test_create_order_user_not_found(mock_get, client):
     mock_get.return_value = FakeResponse(404)
     resp = client.post("/orders", json={"user_id": 999, "item": "Widget"})

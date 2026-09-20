@@ -35,6 +35,12 @@ Compose. `orders-service` and `api-gateway-service` find `users-service` (and
 each other) through service-discovery-by-name, configured via environment
 variables such as `USERS_SERVICE_URL=http://users-service:5001`.
 
+`orders-service` also honors `USERS_SERVICE_TIMEOUT_SECONDS` (default `5`),
+which controls how long it waits on the users-service existence check before
+giving up and returning a 502. Lower it in an environment where a hung
+users-service should fail fast; raise it if users-service is known to be
+slow to respond.
+
 ## A note on Docker in this repo
 
 **Docker wasn't available in the environment these were built in**
