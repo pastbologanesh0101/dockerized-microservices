@@ -84,6 +84,19 @@ def test_create_order_users_service_unreachable(mock_get, client):
 
 
 @patch("orders_service.app.requests.get")
+def test_create_order_users_service_times_out(mock_get, client):
+    """A slow/unresponsive users-service should surface as 502, same as a
+    connection error, not hang or raise an unhandled exception. requests.Timeout
+    is a distinct exception from ConnectionError, so it needs its own case."""
+    import requests
+
+    mock_get.side_effect = requests.Timeout("timed out waiting for users-service")
+    resp = client.post("/orders", json={"user_id": 1, "item": "Widget"})
+    assert resp.status_code == 502
+    assert "unavailable" in resp.get_json()["error"]
+
+
+@patch("orders_service.app.requests.get")
 def test_list_and_get_order(mock_get, client):
     mock_get.return_value = FakeResponse(200)
     created = client.post("/orders", json={"user_id": 1, "item": "Gadget"}).get_json()

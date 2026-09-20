@@ -110,3 +110,14 @@ def test_upstream_unreachable_returns_502(mock_request, client):
     resp = client.get("/users")
     assert resp.status_code == 502
     assert "unavailable" in resp.get_json()["error"]
+
+
+@patch("gateway_service.app.requests.request")
+def test_unknown_path_is_not_proxied_and_returns_404(mock_request, client):
+    """Only /users* and /orders* are registered routes. A path outside both
+    prefixes (e.g. a typo, or an old/unsupported endpoint) should hit Flask's
+    own 404 handling directly, without ever calling out to an upstream
+    service."""
+    resp = client.get("/nonexistent")
+    assert resp.status_code == 404
+    mock_request.assert_not_called()
