@@ -49,6 +49,8 @@ def create_app(db_path=None, users_service_url=None):
 
         if not user_id or not item:
             return jsonify(error="user_id and item are required"), 400
+        if not isinstance(user_id, int) or isinstance(user_id, bool):
+            return jsonify(error="user_id must be an integer"), 400
         if not isinstance(quantity, int) or quantity < 1:
             return jsonify(error="quantity must be a positive integer"), 400
 

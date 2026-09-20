@@ -53,6 +53,18 @@ def test_create_order_invalid_quantity(client):
     assert resp.status_code == 400
 
 
+def test_create_order_non_integer_user_id_rejected(client):
+    """A user_id like "abc" isn't caught by `not user_id` (a non-empty string
+    is truthy), so without an explicit type check it would previously sail
+    through to the users-service lookup and get persisted as-is. That should
+    be rejected up front with a clear 400, before any upstream call is made."""
+    with patch("orders_service.app.requests.get") as mock_get:
+        resp = client.post("/orders", json={"user_id": "abc", "item": "Widget"})
+    assert resp.status_code == 400
+    assert "user_id must be an integer" in resp.get_json()["error"]
+    mock_get.assert_not_called()
+
+
 @patch("orders_service.app.requests.get")
 def test_create_order_valid_user(mock_get, client):
     mock_get.return_value = FakeResponse(200)
